@@ -6,13 +6,16 @@
     </el-header>
 
     <el-main style="background-color: #F5F5F5">
+      <el-row>
+        <el-col :span="16" :push="4">
+          <carousel />
+        </el-col>
+      </el-row>
+
       <el-row :gutter="20">
         <el-col :span="8">
         </el-col>
 
-        <el-col :span="8">
-          <carousel />
-        </el-col>
 
         <el-col :span="8">
           <user-card />

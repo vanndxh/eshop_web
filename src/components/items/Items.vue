@@ -13,7 +13,7 @@
               :src="picUrl"
               :preview-src-list="bigPicUrl">
           </el-image>
-          <p class="a">点击可查看大图</p>
+          <p class="a">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;点击可查看大图</p>
         </div>
       </el-col>
       <el-col :span="12">
@@ -74,11 +74,11 @@
             <el-button type="danger" plain @click="removeTrolley" v-else>移除购物车</el-button>
           </el-col>
           <el-col :span="6">
-            <el-button type="danger" plain @click="buy" v-if="!have">购买书本</el-button>
+            <el-button type="warning" plain @click="buy" v-if="!have">购买书本</el-button>
             <el-button type="success" plain @click="read" v-else>阅读书本</el-button>
           </el-col>
           <el-col :span="6">
-            <el-button type="danger" plain @click="removeBook">删除</el-button>
+            <el-button type="danger" plain @click="removeBook" v-show="isAdmin">删除</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -128,7 +128,8 @@
           </el-row>
           <p class="c">{{ comment.Content }}</p>
           <div align="right">
-            <el-button size="mini" type="danger" plain @click="deleteComments(index)">删除</el-button>
+            <el-button size="mini" type="danger" plain @click="deleteComments(index)"
+                       v-if="isAdmin || isMine(comment.UserID)">删除</el-button>
           </div>
         </el-card>
 
@@ -149,7 +150,9 @@
           </el-col>
           <el-col :span="4">
             <br>
-            <el-button type="primary" round @click="submit">提交</el-button>
+            <el-button :disabled="!have" type="primary" round @click="submit">
+              {{ have ? '提交' : '请先购买' }}
+            </el-button>
           </el-col>
         </el-row>
 
@@ -205,7 +208,10 @@ export default {
   computed:{
     getStar(){
       return this.info.Star / 2
-    }
+    },
+    isAdmin(){
+      return this.$store.state.uid==1
+    },
   },
   data() {
     return {
@@ -232,6 +238,9 @@ export default {
     this.getInCart()
   },
   methods: {
+    isMine(id){
+      return this.$store.state.uid==id
+    },
     getInfo() {
       this.$store.state.axios({
         url: '/go/book/' + this.id,
@@ -285,19 +294,29 @@ export default {
       })
     },
     removeBook() {
-      this.$store.state.axios({
-        url: '/go/book/' + this.id,
-        method: 'delete',
-      }).then(r => {
-        console.log(r.data.status);
-        if (r.data.status === 200){
-          ElMessage.success({
-            message: '恭喜你，已经成功删除!',
-            type: 'success'
-          });
-        }
-      })
-      location.href = "/"
+      this.$confirm('此操作将永久删除该书本, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$store.state.axios({
+          url: '/go/book/' + this.id,
+          method: 'delete',
+        }).then(r => {
+          if (r.data.status === 200){
+            ElMessage.success({
+              message: '恭喜你，已经成功删除!',
+              type: 'success'
+            });
+          }
+          location.href = "/"
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
     },
     addTrolley() {
       this.$store.state.axios({
@@ -333,6 +352,11 @@ export default {
           })
           this.inCart = false
         }
+      }).catch(() => {
+        this.$alert('你还没有登录！', '提示', {
+          confirmButtonText: '确定',
+          center: false
+        })
       })
     },
     deleteComments(index) {
@@ -360,7 +384,12 @@ export default {
           });
           this.have = true
         }
-      });
+      }).catch(()=>{
+        this.$alert('你还没有登录！', '提示', {
+          confirmButtonText: '确定',
+          center: false
+        })
+      })
     },
     read() {
       this.$store.state.axios({
@@ -385,33 +414,44 @@ export default {
       location.reload()
     },
     submit() {
+      let isCommented = false
+      this.comments.forEach(i => {
+        if (this.isMine(i.UserID)) isCommented = true
+      })
+      if (isCommented) {
+        this.$alert('你已经评论过了,请勿重复评论', '提示', {
+          confirmButtonText: '确定',
+          center: false
+        })
+        return
+      }
       if (document.getElementById("comment").value === ""
           || this.value_choose == null){
         this.$alert('内容和评分不能为空~', '提示', {
           confirmButtonText: '确定',
           center: false
         })
-      } else {
-        this.$store.state.axios({
-          url: '/go/comments/',
-          method: 'post',
-          data: {
-            BookID: this.id,
-            Star: this.value_choose,
-            Content: document.getElementById("comment").value
-          },
-        }).then(r => {
-          if (r.data.status === 200) {
-            ElMessage.success({
-              message: '恭喜你，评论成功!',
-              type: 'success'
-            })
-            this.getComments()
-            document.getElementById("comment").value = "";
-            this.value_choose = null
-          }
-        });
+        return
       }
+      this.$store.state.axios({
+        url: '/go/comments/',
+        method: 'post',
+        data: {
+          BookID: this.id,
+          Star: this.value_choose,
+          Content: document.getElementById("comment").value
+        },
+      }).then(r => {
+        if (r.data.status === 200) {
+          ElMessage.success({
+            message: '恭喜你，评论成功!',
+            type: 'success'
+          })
+          this.getComments()
+          document.getElementById("comment").value = "";
+          this.value_choose = null
+        }
+      })
     }
   }
 }

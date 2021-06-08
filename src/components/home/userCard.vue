@@ -1,6 +1,7 @@
 <template>
-  <span>你还没有登录</span>
-  <el-button class="button" type="text">前往登录</el-button>
+<!--  <span>你还没有登录</span>-->
+<!--  <el-button class="button" type="text">前往登录</el-button>-->
+  <p></p>
 </template>
 
 <script>

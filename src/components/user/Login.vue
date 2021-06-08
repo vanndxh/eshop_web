@@ -2,7 +2,7 @@
   <tab-bar></tab-bar>
   <div style="margin-top: 150px">
     <el-row>
-      <el-col :span="8" :push="8">
+      <el-col :span="8" :push="8" align="center">
 
         <el-tabs v-model="activeName" type="border-card">
           <!--登录框验证-->
@@ -40,8 +40,9 @@
               <el-form-item label="邮箱" prop="email2">
                 <el-input v-model="ruleForm2.email2"></el-input>
               </el-form-item>
-              <el-button type="primary" @click="submitForm2('ruleForm2')">注册</el-button>
+                <el-button type="primary" @click="submitForm2('ruleForm2')">注册</el-button>
             </el-form>
+
 
           </el-tab-pane>
 
@@ -151,60 +152,77 @@ export default {
   methods: {
     //登录
     submitForm() {
-      this.$store.state.axios({
-        url: '/go/auth/',
-        method: 'post',
-        data:{
-          Username: this.ruleForm.username,
-          Password: this.ruleForm.pass,
-        }
-      }).then(r => {
-        if (r.data.status === 200) {
-          // 设置token和uid
-          Cookies.set('uid', r.data['userID'])
-          Cookies.set('token', r.data.token)
+      this.$refs['ruleForm'].validate((valid) => {
+        if (valid) {
+          this.$store.state.axios({
+            url: '/go/auth/',
+            method: 'post',
+            data:{
+              Username: this.ruleForm.username,
+              Password: this.ruleForm.pass,
+            }
+          }).then(r => {
+            if (r.data.status === 200) {
+              this.$store.state.pass = this.ruleForm.pass
+              // 设置token和uid
+              Cookies.set('uid', r.data['userID'])
+              Cookies.set('token', r.data.token)
+              Cookies.set('pass', this.ruleForm.pass)
 
-          this.$store.state.uid = r.data['userID']
-          this.$store.state.axios.defaults.headers['Authorization'] = 'Bearer ' + r.data.token
-          // 设置cookie
+              this.$store.state.uid = r.data['userID']
+              this.$store.state.axios.defaults.headers['Authorization'] = 'Bearer ' + r.data.token
+              // 设置cookie
 
-          this.$alert('登录成功,即将自动跳转！', '提示', {
-            confirmButtonText: '确定',
-            center: false
+              this.$alert('登录成功,即将自动跳转！', '提示', {
+                type: 'success',
+                confirmButtonText: '确定',
+                center: false
+              })
+              setTimeout(()=>{
+                this.$router.push({path:'/home'})
+              }, 1500)
+            }
           })
-          setTimeout(()=>{
-            this.$router.push({path:'/home'})
-          }, 1500)
+        } else {
+          return false
         }
       })
     },
     //注册
     submitForm2() {
-      this.$store.state.axios({
-        url: '/go/newAuth',
-        method: 'post',
-        data:{
-          Username: this.ruleForm2.username2,
-          Password: this.ruleForm2.pass2,
-          Name: this.ruleForm2.name2,
-          Email: this.ruleForm2.email2
-        }
-      }).then(r => {
-        console.log(r.data)
-        if (r.data.status === 200) {
-          this.$alert('注册成功！', '提示', {
-            confirmButtonText: '确定',
-            center: false
+      this.$refs['ruleForm2'].validate((valid) => {
+        if (valid) {
+          this.$store.state.axios({
+            url: '/go/newAuth',
+            method: 'post',
+            data:{
+              Username: this.ruleForm2.username2,
+              Password: this.ruleForm2.pass2,
+              Name: this.ruleForm2.name2,
+              Email: this.ruleForm2.email2
+            }
+          }).then(r => {
+            if (r.data.status === 200) {
+              //填充信息
+              this.ruleForm.username = this.ruleForm2.username2
+              this.ruleForm.pass = this.ruleForm2.pass2
+              this.$alert('注册成功！', '提示', {
+                type: 'success',
+                confirmButtonText: '确定',
+                center: false
+              })
+            }
+          }).catch(() => {
+            this.$alert('用户名或邮箱已存在！', '提示', {
+              type: 'error',
+              confirmButtonText: '确定',
+              center: false
+            })
           })
-          //填充信息
-          this.ruleForm.username = this.ruleForm2.username2
-          this.ruleForm.pass = this.ruleForm2.pass2
+        } else {
+          return false
         }
       })
-    },
-    resetForm(formName) {
-      // this.$refs[formName].resetFields();
-      console.log(formName)
     },
     checkEmail(value){
       let myReg=/^[a-zA-Z0-9_-]+@([a-zA-Z0-9]+\.)+(com|cn|net|org)$/;

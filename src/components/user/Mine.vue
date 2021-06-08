@@ -2,7 +2,7 @@
   <tabBar></tabBar>
   <el-row>
     <el-col :span="16" :push="4">
-      <el-tabs tab-position="left" style="height: 100%;">
+      <el-tabs tab-position="left" style="height: 100%;" align="center">
         <!--个人信息-->
         <el-tab-pane label="个人信息">
           <!--头像-->
@@ -11,7 +11,7 @@
               <el-avatar :size="80" :src="urlPortrait"></el-avatar>
             </div>
           </div>
-          <h1 style="font-family: 华文行楷">{{ info.name }}</h1>
+          <h1 style="font-family: 华文行楷">{{ info.Name }}</h1>
           <!--主要内容-->
           <div>
             <el-row>
@@ -22,15 +22,15 @@
                       <i class="el-icon-s-custom"></i>
                       用户名
                     </template>
-                    {{ info.username }}
+                    {{ info.Username }}
                   </el-descriptions-item>
                   <el-descriptions-item>
                     <template #label>
                       <i class="el-icon-user"></i>
                       昵称
                     </template>
-                    <el-input v-model="info.name" :disabled="disable" style="width: 80%" id="nameInput"></el-input>
-                    <el-button size="small" type="primary" @click="changeName" id="changeName" plain>
+                    <el-input v-model="info.Name" :disabled="disable" style="width: 80%" id="nameInput"></el-input>
+                    <el-button size="medium" type="primary" @click="changeName" id="changeName" plain>
                       {{ changeNameButton }}
                     </el-button>
                   </el-descriptions-item>
@@ -39,9 +39,9 @@
                       <i class="el-icon-tickets"></i>
                       密码
                     </template>
-                    <el-input type="password" v-model="info.password" :disabled="disable2" style="width: 80%"
+                    <el-input type="password" v-model="info.Password" :disabled="disable2" style="width: 80%"
                               id="passwordInput"></el-input>
-                    <el-button size="small" type="primary" @click="changePassword" plain>
+                    <el-button size="medium" type="primary" @click="changePassword" plain>
                       {{ changePasswordButton }}
                     </el-button>
                   </el-descriptions-item>
@@ -50,9 +50,11 @@
                       <i class="el-icon-message"></i>
                       邮箱
                     </template>
-                    {{ info.email }}
+                    {{ info.Mail }}
                   </el-descriptions-item>
                 </el-descriptions>
+                <br>
+                <el-button type="danger" @click="logout">退出登录</el-button>
               </el-col>
             </el-row>
           </div>
@@ -132,7 +134,10 @@
             </el-row>
             <p class="c">{{ item.Content }}</p>
             <div align="right">
-              <el-button v-if="info.username === 'vanndxh'" size="mini" type="danger" plain
+              <el-button type="primary" plain size="small"
+                         @click="$router.push({path: '/items/' + item.BookID})">
+                查看详情</el-button>
+              <el-button v-if="info.username === 'vanndxh'" size="small" type="danger" plain
                          @click="deleteComments(index)">删除
               </el-button>
             </div>
@@ -148,6 +153,7 @@
 <script>
 import tabBar from "@/components/common/tabBar";
 import {ElMessage} from "element-plus";
+import Cookies from 'js-cookie'
 
 export default {
   name: "Mine",
@@ -167,10 +173,10 @@ export default {
       comments: [],
       carts: [],
       info: {
-        username: 'vanndxh',
-        password: '123456',
-        name: 'van能的小黑',
-        email: '1025196468@qq.com',
+        Name: 'vanndxh',
+        Password: '',
+        Username: 'van能的小黑',
+        Email: '1025196468@qq.com',
 
       },
       disable: true,
@@ -180,26 +186,61 @@ export default {
     }
   },
   mounted() {
+    this.getInfo()
     this.getCarts()
     this.getComments()
   },
   methods: {
+    getInfo(){
+      this.$store.state.axios({
+        url: '/go/auth/',
+        method: 'get',
+      }).then(r => {
+        this.info = r.data.data
+        this.info.Password = this.$store.state.pass
+        this.info.Email = r.data.data.Mail
+      })
+    },
+    logout() {
+      this.$confirm('确认要退出登录吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        Cookies.set('uid', undefined)
+        Cookies.set('token', undefined)
+        this.$store.state.uid = null
+        this.$store.state.axios.defaults.headers['Authorization'] = ''
+        this.$router.push({path: '/home'})
+      })
+    },
     getCarts() {
       this.$store.state.axios({
         url: '/go/carts/',
         method: 'get',
       }).then(r => {
-        console.log(r.data.data);
         this.carts = r.data.data
       })
     },
     getComments() {
-      this.$store.state.axios({
-        url: '/go/comments/',
-        method: 'get',
-      }).then(r => {
-        this.comments = r.data.data
-      })
+      this.comments = []
+      for (let page=1; page<10 ;page++) {
+        this.$store.state.axios({
+          url: '/go/comments/',
+          method: 'get',
+          params: {page: page}
+        }).then(r => {
+          if (r.data.data.length === 0) {
+            return
+          }
+          r.data.data.forEach(i => {
+            if (i.UserID == this.$store.state.uid) {
+              i.Star = i.Star / 2
+              this.comments.push(i)
+            }
+          })
+        })
+      }
     },
     deleteComments(index) {
       this.$store.state.axios({
@@ -221,12 +262,19 @@ export default {
       } else {
         this.disable2 = true;
         this.changePasswordButton = "修改密码";
-        this.$notify({
-          title: '提示',
-          message: '修改成功！',
-          type: 'success',
-          duration: 1500
-        });
+        this.$store.state.axios({
+          url: '/go/auth/' + this.$store.state.uid,
+          method: 'put',
+          data: this.info
+        }).then(r => {
+          console.log(r.data)
+          this.$notify({
+            title: '提示',
+            message: '修改成功！',
+            type: 'success',
+            duration: 1500,
+          });
+        })
       }
     },
     changeName() {
@@ -236,12 +284,20 @@ export default {
       } else {
         this.disable = true;
         this.changeNameButton = "修改名称";
-        this.$notify({
-          title: '提示',
-          message: '修改成功！',
-          type: 'success',
-          duration: 1500,
-        });
+
+        this.$store.state.axios({
+          url: '/go/auth/' + this.$store.state.uid,
+          method: 'put',
+          data: this.info
+        }).then(r => {
+          console.log(r.data)
+          this.$notify({
+            title: '提示',
+            message: '修改成功！',
+            type: 'success',
+            duration: 1500,
+          });
+        })
       }
     },
     removeTrolley(index) {
@@ -257,9 +313,6 @@ export default {
           this.getCarts()
         }
       })
-    },
-    viewItems(index) {
-      console.log(index);
     }
   }
 }
