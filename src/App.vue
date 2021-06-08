@@ -1,30 +1,21 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </div>
-  <router-view/>
+  <router-view />
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+<script>
+import Cookies from 'js-cookie';
+export default {
+  // 设置cookie
+  beforeMount() {
+    let uid = Cookies.get('uid')
+    if (token) {
+      this.$store.state.uid = uid
+    }
+    let token = Cookies.get('token')
+    if (token) {
+      this.$store.state.token = token
+      this.$store.state.axios.defaults.headers['Authorization'] = 'Bearer ' + token
+    }
+  }
 }
-
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+</script>
