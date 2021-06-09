@@ -145,6 +145,52 @@
 
         </el-tab-pane>
 
+        <!--管理-->
+        <el-tab-pane label="管理" v-if="isAdmin">
+          <h4>管理员管理</h4>
+          <el-tabs v-model="activeName" type="border-card">
+
+            <el-tab-pane label="新增书籍" name="addBook">
+              <br>
+              <!--新增书籍的表单-->
+              <el-form :model="ruleForm3" status-icon :rules="rules" ref="ruleForm3" label-width="100px"
+                       class="demo-ruleForm">
+                <el-form-item label="书籍名称" prop="bookName3">
+                  <el-input v-model="ruleForm3.bookName3" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="书籍价格" prop="bookPrice3">
+                  <el-input type="number" v-model="ruleForm3.bookPrice3" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="作者" prop="bookAuthor3">
+                  <el-input v-model="ruleForm3.bookAuthor3" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="书籍内容" prop="bookContent3">
+                  <el-input v-model="ruleForm3.bookContent3"></el-input>
+                </el-form-item>
+                <el-form-item label="分类" prop="bookCategory3">
+                  <el-select v-model="ruleForm3.bookCategory3" placeholder="选择分类" size="small">
+                    <el-option @click="cateID=i.id" v-for="i in options" :key="i.id" :label="i.name" :value="i.id" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="submitForm3()">添加</el-button>
+                </el-form-item>
+              </el-form>
+            </el-tab-pane>
+
+            <el-tab-pane label="新增分类" name="addCate">
+              <!--新增书籍的表单-->
+              <el-form :model="ruleForm4" status-icon :rules="rules" ref="ruleForm4" label-width="100px">
+                <el-form-item label="书本类别" prop="cateName4">
+                  <el-input v-model="ruleForm4.cateName4"></el-input>
+                </el-form-item>
+              </el-form>
+              <br><el-button type="primary" @click="submitForm4('ruleForm4')">添加</el-button>
+            </el-tab-pane>
+
+          </el-tabs>
+        </el-tab-pane>
+
       </el-tabs>
     </el-col>
   </el-row>
@@ -167,7 +213,81 @@ export default {
     }
   },
   data() {
+    const bookName3 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入书籍名称'));
+      } else {
+        callback();
+      }
+    };
+    var bookPrice3 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入书籍价格'));
+      } else {
+        callback();
+      }
+    };
+    var bookContent3 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入书籍内容'));
+      } else {
+        callback();
+      }
+    };
+    var bookAuthor3 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入书籍作者'));
+      } else {
+        callback();
+      }
+    };
+    var bookCategory3 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入书籍分类'));
+      } else {
+        callback();
+      }
+    };
+    var cateName4 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入分类名称'));
+      } else {
+        callback();
+      }
+    };
     return {
+      options: [],
+      ruleForm3: {
+        bookName3: '',
+        bookPrice3: '',
+        bookContent3: '',
+        bookAuthor3: '',
+        bookCategory3: '',
+      },
+      ruleForm4: {
+        cateName4: '',
+      },
+      rules: {
+        bookName3: [
+          {validator: bookName3, trigger: 'blur'}
+        ],
+        bookPrice3: [
+          {validator: bookPrice3, trigger: 'blur'}
+        ],
+        bookContent3: [
+          {validator: bookContent3, trigger: 'blur'}
+        ],
+        bookAuthor3: [
+          {validator: bookAuthor3, trigger: 'blur'}
+        ],
+        bookCategory3: [
+          {validator: bookCategory3, trigger: 'blur'}
+        ],
+        cateName4: [
+          {validator: cateName4, trigger: 'blur'}
+        ],
+      },
+      activeName: 'addBook',
       urlPortrait: "https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=2178438322,2539713157&fm=26&gp=0.jpg",
       bookPic: 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1017432341,1254182363&fm=224&gp=0.jpg',
       comments: [],
@@ -177,7 +297,6 @@ export default {
         Password: '',
         Username: 'van能的小黑',
         Email: '1025196468@qq.com',
-
       },
       disable: true,
       disable2: true,
@@ -185,12 +304,31 @@ export default {
       changePasswordButton: '修改密码',
     }
   },
+  computed:{
+    isAdmin(){
+      return this.$store.state.uid==1
+    },
+  },
   mounted() {
     this.getInfo()
     this.getCarts()
     this.getComments()
+    this.getCategory()
   },
   methods: {
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+    getCategory(){
+      this.$store.state.axios({
+        url: '/go/categories/',
+        method: 'get'
+      }).then(r => {
+        r.data.data.forEach(i => {
+          this.options.push({name: i.name, id: i.id})
+        })
+      })
+    },
     getInfo(){
       this.$store.state.axios({
         url: '/go/auth/',
@@ -311,6 +449,54 @@ export default {
             type: 'success'
           })
           this.getCarts()
+        }
+      })
+    },
+    submitForm4() {
+      this.$refs['ruleForm4'].validate((valid) => {
+        if (valid) {
+          this.$store.state.axios({
+            url: '/go/categories/',
+            method: 'post',
+            data: {
+              Name: this.ruleForm4.cateName4,
+            }
+          }).then(() => {
+            this.$alert('添加分类成功！', '提示', {
+              type: 'success',
+              confirmButtonText: '确定',
+              center: false
+            })
+            this.resetForm('ruleForm4')
+          })
+        } else {
+          return false
+        }
+      })
+    },
+    submitForm3() {
+      this.$refs['ruleForm3'].validate((valid) => {
+        if (valid) {
+          this.$store.state.axios({
+            url: '/go/book/',
+            method: 'post',
+            data: {
+              Name: this.ruleForm3.bookName3,
+              Price: Number(this.ruleForm3.bookPrice3),
+              Author: this.ruleForm3.bookAuthor3,
+              Content: this.ruleForm3.bookContent3,
+              Category: this.ruleForm3.bookCategory3,
+            }
+          }).then(() => {
+            this.$alert('添加书籍成功！', '提示', {
+              type: 'success',
+              confirmButtonText: '确定',
+              center: false
+            })
+            this.resetForm('ruleForm3')
+          })
+        } else {
+          return false
         }
       })
     }
