@@ -10,20 +10,26 @@
       <el-check-tag :checked="hot===-1" @click="hot=-1">评分升序</el-check-tag>
     </el-row>
 
-    <el-table :data="data" stripe @cell-click="goto">
+    <el-table :data="data" stripe>
       <el-table-column label="书本信息">
         <el-table-column prop="bookName" label="书名" width="350" />
-        <el-table-column prop="author" label="作者" width="220" />
-        <el-table-column prop="cate" label="分类" width="200" />
+        <el-table-column prop="author" label="作者" width="200" />
+        <el-table-column prop="cate" label="分类" width="160" />
       </el-table-column>
 
-      <el-table-column label="热度" width="350">
-        <el-table-column prop="star" label="评分" width="150">
+      <el-table-column label="热度">
+        <el-table-column prop="star" label="评分" width="100">
           <template #default="scope">
             {{ scope.row.star }}
           </template>
         </el-table-column>
-        <el-table-column prop="sell" label="已售" />
+        <el-table-column prop="sell" label="已售" width="100" />
+      </el-table-column>
+
+      <el-table-column label="操作">
+        <template #default="scope">
+          <el-button @click="goto(scope.row.id)" size="small" type="primary" plain>查看详情</el-button>
+        </template>
       </el-table-column>
     </el-table>
 
@@ -60,6 +66,9 @@ export default {
     }
   },
   methods:{
+    getStar(s){
+      return s/2
+    },
     getCategory(){
       this.$store.state.axios({
         url: '/go/categories/',
@@ -92,8 +101,8 @@ export default {
     pageChange(i){
       this.getBooks({page: i})
     },
-    goto(i){
-      this.$router.push({path:'/items/' + i.id})
+    goto(id){
+      this.$router.push({path:'/items/' + id})
     }
   }
 }

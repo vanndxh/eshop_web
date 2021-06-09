@@ -360,16 +360,22 @@ export default {
       })
     },
     deleteComments(index) {
-      this.$store.state.axios({
-        url: '/go/comments/' + this.comments[index].ID,
-        method: 'delete',
-        // eslint-disable-next-line no-unused-vars
+      this.$confirm('是否删除该条评论?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       }).then(() => {
-        ElMessage.success({
-          message: '恭喜你，评论已删除!',
-          type: 'success'
+        this.$store.state.axios({
+          url: '/go/comments/' + this.comments[index].ID,
+          method: 'delete',
+          // eslint-disable-next-line no-unused-vars
+        }).then(() => {
+          ElMessage.success({
+            message: '恭喜你，评论已删除!',
+            type: 'success'
+          })
+          this.getComments()
         })
-        this.getComments()
       })
     },
     buy() {

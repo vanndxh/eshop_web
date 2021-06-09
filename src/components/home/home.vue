@@ -1,5 +1,5 @@
 <template>
-  <el-container style="height:730px">
+  <el-container>
 
     <el-header>
       <tab-bar />
