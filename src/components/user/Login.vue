@@ -182,6 +182,12 @@ export default {
                 this.$router.push({path:'/home'})
               }, 1500)
             }
+          }).catch(()=>{
+            this.$alert('用户名或密码错误！', '提示', {
+              type: 'error',
+              confirmButtonText: '确定',
+              center: false
+            })
           })
         } else {
           return false

@@ -206,12 +206,6 @@ export default {
   components: {
     tabBar
   },
-  setup() {
-    let id = 1
-    return {
-      id
-    }
-  },
   data() {
     const bookName3 = (rule, value, callback) => {
       if (value === '') {

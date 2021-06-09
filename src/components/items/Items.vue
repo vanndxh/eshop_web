@@ -42,6 +42,13 @@
           </el-descriptions-item>
           <el-descriptions-item>
             <template #label>
+              <i class="el-icon-tickets"></i>
+              购买人数
+            </template>
+            {{ info.PayNumber }}
+          </el-descriptions-item>
+          <el-descriptions-item>
+            <template #label>
               <i class="el-icon-office-building"></i>
               评分
             </template>
@@ -50,13 +57,6 @@
                 disabled
                 show-score
                 text-color="#ff9900" />
-          </el-descriptions-item>
-          <el-descriptions-item>
-            <template #label>
-              <i class="el-icon-tickets"></i>
-              购买人数
-            </template>
-            {{ info.PayNumber }}
           </el-descriptions-item>
           <el-descriptions-item>
             <template #label>
