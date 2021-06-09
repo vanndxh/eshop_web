@@ -110,6 +110,47 @@
           </el-card>
         </el-tab-pane>
 
+        <!--已购书籍-->
+        <el-tab-pane label="已购书籍">
+          <h4>已购书籍</h4>
+          <el-card v-for="item in haves" :key="item">
+            <el-row>
+              <el-col :span="4">
+                <img :src="bookPic" alt="bookPic" style="width: 180px; height: 180px;">
+              </el-col>
+              <el-col :span="18" :push="1">
+                <el-descriptions class="margin-top" title="商品详情" :column="1" :size="''" border>
+                  <el-descriptions-item>
+                    <template #label>
+                      <i class="el-icon-s-management"></i>
+                      书本名称
+                    </template>
+                    {{ item.name }}
+                  </el-descriptions-item>
+                  <el-descriptions-item>
+                    <template #label>
+                      <i class="el-icon-s-custom"></i>
+                      书本作者
+                    </template>
+                    {{ item.author }}
+                  </el-descriptions-item>
+                </el-descriptions>
+                <br>
+                <!--其他按钮操作-->
+                <el-row>
+                  <el-col :span="4" :push="16">
+                  </el-col>
+                  <el-col :span="4" :push="16">
+                    <el-button type="primary" plain size="small"
+                               @click="$router.push({path: '/items/' + item.id})">
+                      查看详情</el-button>
+                  </el-col>
+                </el-row>
+              </el-col>
+            </el-row>
+          </el-card>
+        </el-tab-pane>
+
         <!--评论-->
         <el-tab-pane label="历史评论">
           <h4>历史评论</h4>
@@ -286,6 +327,7 @@ export default {
       bookPic: 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1017432341,1254182363&fm=224&gp=0.jpg',
       comments: [],
       carts: [],
+      haves: [],
       info: {
         Name: 'vanndxh',
         Password: '',
@@ -306,12 +348,21 @@ export default {
   mounted() {
     this.getInfo()
     this.getCarts()
+    this.getHaves()
     this.getComments()
     this.getCategory()
   },
   methods: {
     resetForm(formName) {
       this.$refs[formName].resetFields();
+    },
+    getHaves(){
+      this.$store.state.axios({
+        url: '/go/purchased/',
+        method: 'get'
+      }).then(r => {
+        this.haves = r.data.data
+      })
     },
     getCategory(){
       this.$store.state.axios({
